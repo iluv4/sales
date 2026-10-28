@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sales-agent"
+version = "0.1.0"
+description = "A configurable sales agent built on the Claude API: research, qualify, draft outreach, track pipeline."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = ["anthropic>=2.3,<3"]
+
+[project.optional-dependencies]
+dev = ["pytest>=8"]
+
+[project.scripts]
+sales-agent = "sales_agent.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.setuptools.package-data]
+sales_agent = ["config.example.toml"]

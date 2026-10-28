@@ -1,0 +1,48 @@
+# Sales agent configuration.
+# Copy to config.toml (or run `sales-agent init`) and fill in your details.
+# Everything here goes into the agent's system prompt, so be concrete.
+
+[company]
+name = "Your Company"
+website = "https://example.com"
+# One or two sentences: what you sell and to whom.
+product = "Describe your product or service here."
+value_proposition = "The core outcome customers get, in plain words."
+differentiators = [
+  "What makes you different from the obvious alternative",
+  "A second reason buyers pick you",
+]
+# Optional: pricing model, typical deal size, anything the agent may say about price.
+pricing_notes = ""
+# Optional: named customers or results the agent is allowed to reference.
+proof_points = []
+
+[icp]
+# Who is a good fit. Leave a list empty if it doesn't matter.
+industries = []
+company_size = "e.g. 50-1000 employees"
+regions = []
+buyer_titles = ["e.g. Head of Operations", "e.g. VP Sales"]
+pain_points = ["A problem your best customers had before buying"]
+# Hard no's: if any applies, the lead is disqualified.
+disqualifiers = []
+
+[outreach]
+sender_name = "Your Name"
+sender_title = "Your Title"
+# Plain description of your voice, e.g. "direct, warm, no buzzwords".
+tone = "direct, friendly, concise; no hype or buzzwords"
+max_words = 120
+call_to_action = "a 20-minute intro call"
+
+[agent]
+model = "claude-opus-5-5"
+# low | medium | high | xhigh | max. Higher is more thorough and costs more.
+effort = "high"
+# SQLite file that holds leads, activities and drafts. Relative paths resolve
+# against the directory this config file is in.
+db_path = "sales.db"
+# Let the agent use web search and web fetch for prospect research.
+web_research = true
+# Upper bound on web searches per request.
+max_web_searches = 8
