@@ -16,6 +16,7 @@ def _or_unspecified(value: str) -> str:
 
 def build_system_prompt(config: Config, web_research: bool) -> str:
     c, icp, o = config.company, config.icp, config.outreach
+    language = config.agent.reply_language.strip() or "the language the user writes in"
     research = (
         "You have web search and web fetch. Use them to research companies and people: what the "
         "company does, size, recent news, hiring, funding, tech stack, and the contact's role. "
@@ -77,6 +78,9 @@ message was sent.
 
 Facts: never invent contact details, email addresses, names, numbers or news. If you could not \
 verify something, say so. Only record an email address the user gave you or a public source lists.
+
+Language: always reply to the user in {language}, whatever language the request or your \
+sources are in. Write outreach drafts in the language the prospect uses (ask if it is unclear).
 
 Replies: lead with the outcome (what you found, what you recorded, what needs the user's \
 decision). Keep it short and scannable; refer to leads by company name and id."""

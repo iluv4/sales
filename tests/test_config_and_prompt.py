@@ -43,3 +43,10 @@ def test_prompt_contains_config_and_is_stable(tmp_path):
     assert "web search" in prompt
     assert prompt == build_system_prompt(config, web_research=True)
     assert "Web research is turned off" in build_system_prompt(config, web_research=False)
+
+
+def test_reply_language(tmp_path):
+    korean = build_system_prompt(load_config(write(tmp_path, "")), web_research=True)
+    assert "always reply to the user in Korean" in korean
+    english = load_config(write(tmp_path, "[agent]\nreply_language = 'English'\n"))
+    assert "always reply to the user in English" in build_system_prompt(english, web_research=True)

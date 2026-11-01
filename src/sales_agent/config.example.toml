@@ -46,3 +46,6 @@ db_path = "sales.db"
 web_research = true
 # Upper bound on web searches per request.
 max_web_searches = 8
+# Language the agent uses when it talks to you, e.g. "Korean", "English".
+# Outreach drafts follow the prospect's language instead.
+reply_language = "Korean"

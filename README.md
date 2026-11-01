@@ -83,6 +83,7 @@ API settings, defaults first (change them under `[agent]` in `config.toml`):
 - **Effort:** `high`. Adaptive thinking is on.
 - **Prompt caching:** the system prompt, tools and history are cached, so long sessions stay cheap.
 - **Refusal fallback:** server-side refusal fallback (`fallbacks: "default"`) is on for models that support it. If the main model declines a request, the API retries it on a fallback model.
+- **Reply language:** `reply_language = "Korean"` (default). The agent always answers you in this language; outreach drafts follow the prospect's language.
 - **Web research:** set `web_research = false` to keep the agent off the web. `max_web_searches` caps searches per request.
 
 ## Development

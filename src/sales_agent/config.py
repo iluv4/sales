@@ -48,6 +48,7 @@ class AgentConfig:
     db_path: str = "sales.db"
     web_research: bool = True
     max_web_searches: int = 8
+    reply_language: str = "Korean"
 
 
 @dataclass
