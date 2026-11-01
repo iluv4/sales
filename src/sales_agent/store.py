@@ -88,7 +88,9 @@ class Store:
     def __init__(self, path: str | Path = ":memory:"):
         if path != ":memory:":
             Path(path).parent.mkdir(parents=True, exist_ok=True)
-        self.conn = sqlite3.connect(str(path))
+        # A web request may run on a different worker thread than the one that opened the store.
+        # Callers use a store from one thread at a time; SQLite's own locking covers separate stores.
+        self.conn = sqlite3.connect(str(path), timeout=10, check_same_thread=False)
         self.conn.row_factory = sqlite3.Row
         self.conn.execute("PRAGMA foreign_keys = ON")
         self.conn.executescript(SCHEMA)

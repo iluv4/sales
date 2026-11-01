@@ -4,7 +4,9 @@ from __future__ import annotations
 
 import argparse
 import csv
+import ipaddress
 import json
+import os
 import shutil
 import sys
 from importlib import resources
@@ -18,7 +20,8 @@ DEFAULT_CONFIG = Path("config.toml")
 
 
 def _load(args: argparse.Namespace):
-    path = Path(args.config) if args.config else (DEFAULT_CONFIG if DEFAULT_CONFIG.exists() else None)
+    explicit = args.config or os.environ.get("SALES_AGENT_CONFIG")
+    path = Path(explicit) if explicit else (DEFAULT_CONFIG if DEFAULT_CONFIG.exists() else None)
     if path is not None and not path.exists():
         sys.exit(f"Config file not found: {path}")
     try:
@@ -185,9 +188,41 @@ def cmd_import(args: argparse.Namespace) -> None:
     print(f"Imported {added} lead(s), skipped {skipped} (duplicates or missing company).")
 
 
+def _is_loopback(host: str) -> bool:
+    if host == "localhost":
+        return True
+    try:
+        return ipaddress.ip_address(host).is_loopback
+    except ValueError:
+        return False
+
+
+def cmd_web(args: argparse.Namespace) -> None:
+    try:
+        import uvicorn
+
+        from .web import create_app
+    except ImportError:
+        sys.exit('The web service needs extra packages: pip install -e ".[web]"')
+
+    password = os.environ.get("SALES_AGENT_PASSWORD") or None
+    if not password and not _is_loopback(args.host):
+        sys.exit(
+            f"Refusing to serve on {args.host} without a password: anyone who reaches it could use your "
+            "API key and read your CRM. Set SALES_AGENT_PASSWORD, or use --host 127.0.0.1."
+        )
+    config, store = _load(args)
+    store.close()
+    port = args.port or int(os.environ.get("PORT", "8000"))
+    print(f"Sales agent web: http://{'localhost' if _is_loopback(args.host) else args.host}:{port}")
+    uvicorn.run(create_app(config, password=password), host=args.host, port=port)
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="sales-agent", description="A sales agent built on Claude.")
-    parser.add_argument("-c", "--config", help="path to config.toml (default: ./config.toml)")
+    parser.add_argument(
+        "-c", "--config", help="path to config.toml (default: $SALES_AGENT_CONFIG, else ./config.toml)"
+    )
     sub = parser.add_subparsers(dest="command", required=True)
 
     p = sub.add_parser("init", help="create a config.toml to fill in")
@@ -201,6 +236,11 @@ def build_parser() -> argparse.ArgumentParser:
     p = sub.add_parser("ask", help="one request, e.g. ask 'research and qualify Acme Corp'")
     p.add_argument("prompt", nargs="+")
     p.set_defaults(func=cmd_ask)
+
+    p = sub.add_parser("web", help="run the web chat service in your browser")
+    p.add_argument("--host", default="127.0.0.1", help="0.0.0.0 to accept outside connections (needs a password)")
+    p.add_argument("--port", type=int, help="default: $PORT, else 8000")
+    p.set_defaults(func=cmd_web)
 
     p = sub.add_parser("leads", help="list leads (no API call)")
     p.add_argument("query", nargs="?")

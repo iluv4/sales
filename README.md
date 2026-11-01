@@ -1,6 +1,6 @@
 # Sales Agent
 
-A sales development agent you run from the command line. It's built on the Claude API. Tell it about your product and your ideal customer once. After that it can:
+A sales development agent you talk to in a web chat (or from the command line). It's built on the Claude API. Tell it about your product and your ideal customer once. After that it can:
 
 - **research** prospects on the web: what the company does, its size, recent news, hiring, and the contact's role
 - **qualify** leads against your ideal customer profile, giving each a 0–100 score and the evidence behind it
@@ -14,7 +14,7 @@ The agent **never sends anything**. Drafts wait in the CRM until you review and 
 Requires Python 3.11+.
 
 ```bash
-pip install -e .
+pip install -e ".[web]"
 ```
 
 ```bash
@@ -29,7 +29,37 @@ sales-agent init
 
 `init` writes `config.toml`. Fill in the `[company]`, `[icp]` and `[outreach]` sections. Everything there goes into the agent's instructions, so be concrete: real pain points, real disqualifiers, and only the proof points the agent is allowed to cite. `config.toml` and the database are git-ignored, so your data stays local.
 
-## Use it
+## Web chat
+
+```bash
+sales-agent web
+```
+
+Open http://localhost:8000. Chat with the agent on the left; the right-hand panel shows the pipeline, your leads (click one for its activity log) and the drafts awaiting review, with buttons to copy a draft, mark it sent or discard it. The interface is in Korean.
+
+### Serving it to others
+
+Anyone who reaches the page can spend your API credits and read your CRM, so the server refuses to listen beyond your own machine without a password:
+
+```bash
+SALES_AGENT_PASSWORD='choose-a-strong-one' sales-agent web --host 0.0.0.0
+```
+
+Browsers then ask for a login; any username works with that password. Put the service behind HTTPS (most hosting platforms do this for you), since the password travels with every request.
+
+To deploy with Docker, mount a volume at `/data` holding your `config.toml` (the database is created next to it):
+
+```bash
+docker build -t sales-agent .
+```
+
+```bash
+docker run -p 8000:8000 -v "$PWD/data:/data" -e ANTHROPIC_API_KEY -e SALES_AGENT_PASSWORD sales-agent
+```
+
+On hosting platforms that set `PORT`, the server listens on it. Conversations are held in memory, so a restart starts fresh chats; leads, activity and drafts are saved in the database.
+
+## Command line
 
 Interactive session:
 
@@ -72,6 +102,7 @@ Pipeline stages: `new → researching → qualified → contacted → meeting �
 | File | Role |
 |---|---|
 | `src/sales_agent/agent.py` | Runs the conversation with the Anthropic SDK tool runner (`client.beta.messages.tool_runner`). It keeps the history, rolls back a turn that fails, and handles refusals and output limits. |
+| `src/sales_agent/web.py`, `static/index.html` | The web chat service (FastAPI). Replies stream in with each tool step the agent takes. |
 | `src/sales_agent/tools.py` | The CRM tools Claude can call: `add_lead`, `update_lead`, `get_lead`, `search_leads`, `qualify_lead`, `log_activity`, `save_outreach_draft`, `pipeline_summary`. Also turns on Anthropic's hosted `web_search` / `web_fetch` tools. |
 | `src/sales_agent/prompts.py` | Builds the system prompt from your config. |
 | `src/sales_agent/store.py` | The SQLite CRM. |
