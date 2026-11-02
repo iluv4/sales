@@ -1,0 +1,9 @@
+.venv/
+__pycache__/
+*.pyc
+*.egg-info/
+.pytest_cache/
+# Local data: your config and CRM database stay on your machine
+config.toml
+*.db
+build/
